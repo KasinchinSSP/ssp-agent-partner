@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseServer } from "../../../../../../lib/supabaseServer";
-// เส้นทาง relative: route.ts อยู่ใน app/r/[ref]/[plan]/route.ts
-// ขึ้นไป root 4 ชั้น => ../../../../.. แล้วเข้า lib/supabaseServer
+import { supabaseServer } from "@/lib/supabaseServer";
 
 type Params = { ref: string; plan: string };
 
