@@ -35,4 +35,13 @@ export default function PlanDetail({ params, searchParams }: Props) {
       </div>
     </main>
   );
+
+  const shareUrl = ref ? `/r/${ref}/${params.planKey}` : "";
+  {
+    ref && (
+      <p style={{ marginTop: 12 }}>
+        ลิงก์สำหรับแชร์ตัวแทน: <a href={shareUrl}>{shareUrl}</a>
+      </p>
+    );
+  }
 }
