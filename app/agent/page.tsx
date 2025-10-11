@@ -5,30 +5,18 @@ export default async function AgentPage({
 }: {
   searchParams: { ref?: string };
 }) {
-  const ref = searchParams.ref || "";
-  const { data: leads, error } = await supabaseServer
-    .from("leads")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(100)
-    .maybeSingle(); // NOTE: ถ้าต้องการหลายแถวให้เอา maybeSingle() ออก
+  const ref = (searchParams.ref || "").trim();
 
-  // เวอร์ชันหลายแถว (แนะนำ):
-  // const { data: leads, error } = await supabaseServer
-  //   .from("leads")
-  //   .select("*")
-  //   .eq(ref ? "ref" : "ref", ref || "") // ถ้ากำหนด ref คัดเฉพาะ, ไม่งั้นว่าง
-  //   .order("created_at", { ascending: false })
-  //   .limit(100);
-
-  // แก้ให้ถูก: ใช้แบบนี้แทนด้านบน (หลายแถว + เงื่อนไข ref):
+  // ดึง leads โดยกรองตาม ref (ถ้าไม่ใส่ ref จะแสดงว่าง)
   const query = supabaseServer
     .from("leads")
     .select("*")
     .order("created_at", { ascending: false })
     .limit(100);
-  const { data, error: err } = ref ? await query.eq("ref", ref) : await query;
-  const list = data || [];
+
+  const { data, error } = ref
+    ? await query.eq("ref", ref)
+    : await query.eq("ref", "__none__");
 
   return (
     <main style={{ padding: 24 }}>
@@ -36,8 +24,19 @@ export default async function AgentPage({
       <p>
         ใส่โค้ดตัวแทนใน URL เช่น <code>/agent?ref=AG123</code>
       </p>
-      {err && <p style={{ color: "red" }}>{String(err.message)}</p>}
-      <table border={1} cellPadding={6} style={{ marginTop: 12 }}>
+
+      {error && <p style={{ color: "red" }}>เกิดข้อผิดพลาด: {error.message}</p>}
+      {!ref && (
+        <p style={{ marginTop: 12 }}>
+          ยังไม่ได้ใส่ <code>?ref=...</code> จึงยังไม่แสดงรายการ
+        </p>
+      )}
+
+      <table
+        border={1}
+        cellPadding={6}
+        style={{ marginTop: 16, width: "100%", maxWidth: 1000 }}
+      >
         <thead>
           <tr>
             <th>วันที่</th>
@@ -46,11 +45,11 @@ export default async function AgentPage({
             <th>อายุ</th>
             <th>แผน</th>
             <th>Ref</th>
-            <th>ดำเนินการ</th>
+            <th>จัดการ</th>
           </tr>
         </thead>
         <tbody>
-          {list.map((x: any) => (
+          {(data || []).map((x: any) => (
             <tr key={x.id}>
               <td>{new Date(x.created_at).toLocaleString()}</td>
               <td>{x.full_name}</td>
@@ -59,7 +58,6 @@ export default async function AgentPage({
               <td>{x.plan ?? ""}</td>
               <td>{x.ref ?? ""}</td>
               <td>
-                {/* ปุ่มเตรียมไป Autofill (ใส่ payload พื้นฐาน) */}
                 <a href={`/tools/open-apply?lead=${x.id}`}>เปิด iAPPLY/BIS</a>
               </td>
             </tr>
