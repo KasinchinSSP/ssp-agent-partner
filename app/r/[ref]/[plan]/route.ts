@@ -1,22 +1,28 @@
-import { supabaseServer } from "../../../../lib/supabaseServer";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { supabaseServer } from "../../../../../../lib/supabaseServer";
+// เส้นทาง relative: route.ts อยู่ใน app/r/[ref]/[plan]/route.ts
+// ขึ้นไป root 4 ชั้น => ../../../../.. แล้วเข้า lib/supabaseServer
 
 type Params = { ref: string; plan: string };
 
-export async function GET(_req: Request, { params }: { params: Params }) {
-  const { ref, plan } = params;
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<Params> }
+) {
+  const { ref, plan } = await context.params;
 
-  // บันทึก event
+  // บันทึก event ไว้ดูสถิติ
   await supabaseServer.from("ref_events").insert({
     ref,
     plan,
-    path: `/r/${ref}/${plan}`,
+    path: request.nextUrl.pathname,
+    user_agent: request.headers.get("user-agent") || "",
   });
 
-  // ส่งต่อไปหน้าแบบประกัน พร้อม ref
-  const url = new URL(
+  // redirect ไปหน้าแผน พร้อมติด ref
+  const target = new URL(
     `/plans/${plan}?ref=${encodeURIComponent(ref)}`,
-    process.env.NEXT_PUBLIC_BASE_URL || "https://" + _req.headers.get("host")
+    request.nextUrl.origin
   );
-  return NextResponse.redirect(url, { status: 302 });
+  return NextResponse.redirect(target, { status: 302 });
 }
