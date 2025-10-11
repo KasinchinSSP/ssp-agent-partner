@@ -1,38 +1,34 @@
-import { NextRequest, NextResponse } from "next/server";
+// app/api/lead/route.ts
 import { supabaseServer } from "@/lib/supabaseServer";
 
-type Params = { id: string };
+export async function POST(req: Request) {
+  try {
+    const data = await req.json();
+    if (!data.fullName || !data.phone) {
+      return new Response(
+        JSON.stringify({ ok: false, error: "missing fields" }),
+        { status: 400 }
+      );
+    }
 
-export async function GET(
-  _req: NextRequest,
-  context: { params: Promise<Params> }
-) {
-  const { id } = await context.params;
+    const row = {
+      full_name: String(data.fullName),
+      phone: String(data.phone),
+      age: data.age ? Number(data.age) : null,
+      plan: data.plan ? String(data.plan) : null,
+      ref: data.ref ? String(data.ref) : null,
+      user_agent: req.headers.get("user-agent") || "",
+      pdpa_ok: true,
+    };
 
-  // ดึงเฉพาะฟิลด์ที่จำเป็นต่อการทำ payload
-  const { data, error } = await supabaseServer
-    .from("leads")
-    .select("id, full_name, phone, age, plan, ref, created_at")
-    .eq("id", id)
-    .single();
-
-  if (error) {
-    return NextResponse.json(
-      { ok: false, error: error.message },
-      { status: 404 }
-    );
+    const { error } = await supabaseServer.from("leads").insert(row);
+    if (error) {
+      console.error("[leads.insert] error:", error);
+      return new Response(JSON.stringify({ ok: false }), { status: 500 });
+    }
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+  } catch (e) {
+    console.error(e);
+    return new Response(JSON.stringify({ ok: false }), { status: 500 });
   }
-
-  // ปรับชื่อคีย์ให้ตรงที่ฝั่ง client จะใช้
-  const lead = {
-    id: data.id,
-    fullName: data.full_name,
-    phone: data.phone,
-    age: data.age,
-    plan: data.plan,
-    ref: data.ref,
-    createdAt: data.created_at,
-  };
-
-  return NextResponse.json(lead, { status: 200 });
 }
