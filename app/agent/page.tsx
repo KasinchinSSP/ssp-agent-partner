@@ -58,7 +58,8 @@ export default async function AgentPage({
               <td>{x.plan ?? ""}</td>
               <td>{x.ref ?? ""}</td>
               <td>
-                <a href={`/tools/open-apply?lead=${x.id}`}>เปิด iAPPLY/BIS</a>
+                <a href={`/tools/open-apply?lead=${x.id}&via=main`}>BIS</a>
+                {/* ถ้าอยากให้เปิดผ่านหน้า Login ก่อน: via=login */}
               </td>
             </tr>
           ))}

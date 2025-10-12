@@ -43,6 +43,7 @@ export async function POST(req: Request) {
       ref: data.ref ? String(data.ref) : null,
       user_agent: req.headers.get("user-agent") || "",
       pdpa_ok: true,
+      sum_assured: data.sumAssured ? Number(data.sumAssured) : null,
     };
 
     const { error } = await supabaseServer.from("leads").insert(row);

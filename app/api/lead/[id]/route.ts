@@ -12,7 +12,7 @@ export async function GET(
 
   const { data, error } = await supabaseServer
     .from("leads")
-    .select("id, full_name, phone, age, plan, ref, created_at")
+    .select("id, full_name, phone, age, plan, ref, sum_assured, created_at")
     .eq("id", id)
     .single();
 
@@ -30,6 +30,7 @@ export async function GET(
     age: data.age,
     plan: data.plan,
     ref: data.ref,
+    sumAssured: data.sum_assured, // ← เพิ่ม
     createdAt: data.created_at,
   };
 

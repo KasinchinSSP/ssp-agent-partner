@@ -60,6 +60,12 @@ export default function Quote({ searchParams }: Props) {
           <br />
           <input name="plan" defaultValue={plan} />
         </label>
+        <label>
+          ทุนเอาประกัน (บาท)
+          <br />
+          <input name="sumAssured" type="number" min={0} step={1000} />
+        </label>
+
         <input type="hidden" name="ref" value={ref} />
 
         {/* PDPA */}
