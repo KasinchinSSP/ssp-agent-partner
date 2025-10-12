@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 
 type Props = { searchParams: { plan?: string; ref?: string } };
@@ -7,7 +6,7 @@ type Props = { searchParams: { plan?: string; ref?: string } };
 export default function Quote({ searchParams }: Props) {
   const [saving, setSaving] = useState(false);
   const plan = searchParams.plan || "";
-  const ref = searchParams.ref || ""; // โค้ดตัวแทน
+  const ref = searchParams.ref || "";
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -29,7 +28,7 @@ export default function Quote({ searchParams }: Props) {
   return (
     <main style={{ padding: 24, maxWidth: 520 }}>
       <h1>ขอใบเสนอราคา</h1>
-      <form onSubmit={submit}>
+      <form onSubmit={submit} autoComplete="off">
         <label>
           ชื่อ-นามสกุล
           <br />
@@ -40,7 +39,12 @@ export default function Quote({ searchParams }: Props) {
         <label>
           เบอร์โทร
           <br />
-          <input name="phone" required />
+          <input
+            name="phone"
+            required
+            pattern="0[0-9]{9}"
+            title="กรอกเบอร์ 10 หลักขึ้นต้น 0"
+          />
         </label>
         <br />
         <br />
@@ -56,18 +60,30 @@ export default function Quote({ searchParams }: Props) {
           <br />
           <input name="plan" defaultValue={plan} />
         </label>
-
-        {/* ช่องซ่อน เก็บรหัสตัวแทน */}
         <input type="hidden" name="ref" value={ref} />
 
-        <br />
+        {/* PDPA */}
+        <div style={{ marginTop: 12 }}>
+          <label>
+            <input type="checkbox" name="pdpa" required />{" "}
+            ยินยอมให้ติดต่อกลับตามข้อมูลที่กรอก (PDPA)
+          </label>
+        </div>
+
+        {/* Honeypot (กันบอท): ช่องซ่อน ต้องว่างเสมอ */}
+        <div style={{ display: "none" }}>
+          <label>
+            ห้ามกรอกช่องนี้
+            <input name="hp" />
+          </label>
+        </div>
+
         <br />
         <button type="submit" disabled={saving}>
           {saving ? "กำลังส่ง..." : "ส่งคำขอ"}
         </button>
       </form>
 
-      {/* debug ให้เห็นว่ามี ref ติดมาจริง */}
       {ref ? (
         <p style={{ marginTop: 12 }}>
           Ref ตัวแทน: <b>{ref}</b>

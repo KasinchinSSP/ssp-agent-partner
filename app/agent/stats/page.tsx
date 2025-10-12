@@ -29,7 +29,6 @@ export default async function AgentStats({
     );
   }
 
-  // 1) ดึง ref_events (คลิก/สแกน)
   const { data: events, error: errE } = await supabaseServer
     .from("ref_events")
     .select("id, created_at, plan")
@@ -38,7 +37,6 @@ export default async function AgentStats({
     .order("created_at", { ascending: false })
     .limit(5000);
 
-  // 2) ดึง leads (ลีดจริง)
   const { data: leads, error: errL } = await supabaseServer
     .from("leads")
     .select("id, created_at, plan")
@@ -58,7 +56,6 @@ export default async function AgentStats({
     leadsByDay[k] = (leadsByDay[k] || 0) + 1;
   });
 
-  // รวมคีย์วันทุกวัน
   const daysKeys = Array.from(
     new Set([...Object.keys(clicksByDay), ...Object.keys(leadsByDay)])
   ).sort();
@@ -72,7 +69,6 @@ export default async function AgentStats({
       <p>
         Agent: <b>{ref}</b> | ช่วง: <b>{days}</b> วันล่าสุด
       </p>
-
       {(errE || errL) && (
         <p style={{ color: "red" }}>เกิดข้อผิดพลาดในการโหลดข้อมูล</p>
       )}
