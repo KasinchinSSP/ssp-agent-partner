@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import type { PlansFile } from "@/lib/premium/client/types";
 import { AgentContactCard } from "@/components/AgentContactCard";
 import { withRef } from "@/lib/utils/ref";
+import { Suspense } from "react";
 
 const LIFE_KEYS = [
   "HappyValue90_20",
@@ -65,7 +66,7 @@ export default function HomePage() {
       <section className="bg-gradient-to-br from-[var(--brand-life)] to-sky-600">
         <div className="mx-auto max-w-screen-lg px-4 py-10 text-white">
           <div className="text-xs opacity-90">
-            เว็บไซต์ทีมตัวแทนในสังกัดบริษัท ฟิลลิปประกันชีวิต
+            เว็บไซต์ทีมตัวแทนในสังกัดบริษัท ฟิลลิปประกันชีวิต v0.07 UI
           </div>
           <h1 className="mt-2 text-2xl sm:text-3xl font-semibold">
             วางแผนวันนี้ เพื่อความสบายใจวันหน้า กับฟิลลิปประกันชีวิต
@@ -93,7 +94,9 @@ export default function HomePage() {
 
       {/* Agent contact (ref) */}
       <section className="mx-auto max-w-screen-lg px-4 -mt-6">
-        <AgentContactCard />
+        <Suspense>
+          <AgentContactCard />
+        </Suspense>
       </section>
 
       {/* 2) เกี่ยวกับบริษัทแบบย่อ */}
