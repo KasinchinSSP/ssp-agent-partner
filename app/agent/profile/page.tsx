@@ -8,6 +8,23 @@ import BISTools from "@/components/agent/BISTools";
 
 export const revalidate = 0;
 
+// getAgentBySecret
+const admin = supabaseService();
+const { data } = await admin
+  .from("agent_profiles")
+  .select("code,name,phone,line,agent_secret")
+  .eq("agent_secret", key)
+  .single();
+
+// getRecentLeads
+const admin = supabaseService();
+const { data } = await admin
+  .from("leads")
+  .select("id, full_name, plan_key, gender, age, sum_assured, created_at")
+  .eq("ref", agentCode)
+  .order("created_at", { ascending: false })
+  .limit(20);
+
 type AgentProfile = {
   code: string;
   name: string | null;
