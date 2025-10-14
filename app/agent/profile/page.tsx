@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { supabaseServer } from "@/lib/supabaseServer";
-import ReferralTools from "@/components/agent/ReferralTools";
-import LeadsTable from "@/components/agent/LeadsTable";
-import BISTools from "@/components/agent/BISTools";
+import { supabaseServer } from "../../../lib/supabaseServer";
+import ReferralTools from "../../../components/agent/ReferralTools";
+import LeadsTable from "../../../components/agent/LeadsTable";
+import BISTools from "../../../components/agent/BISTools";
 
 type AgentProfile = {
   code: string; // AG123
