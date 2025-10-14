@@ -260,6 +260,7 @@
     {
       "planKey": "PremiumReturn25_15",
       "planName": "Premium Return 25/15",
+      "planSub": "ชำระเบี้ย 15 ปี คุ้มครอง 25 ปี พร้อมรับเงินคืนเมื่อครบสัญญา",
       "ageRange": { "min": 0, "max": 60 },
       "minSumAssured": 200000,
       "calculationType": "rateTable",

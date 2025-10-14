@@ -30,7 +30,6 @@ export default function ProductDetailPage({
   const [sa, setSa] = useState<number | undefined>();
   const [out, setOut] = useState<any>(null);
 
-  // mock key points (ไม่มีข้อมูลจริงใน JSON ตอนนี้)
   const keyPoints = [
     "ชำระเบี้ยระยะสั้น คุ้มครองยาว",
     "รับเงินคืน/ผลประโยชน์ตามเงื่อนไขแผน",
