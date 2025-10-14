@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
-type Params = { ref: string; plan: string };
+export async function GET(request: NextRequest, context: any) {
+  const params = (await context?.params) ?? {};
+  const ref = String(params.ref || "");
+  const plan = String(params.plan || "");
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Params }
-) {
-  const { ref, plan } = params;
+  if (!ref || !plan) {
+    return NextResponse.json(
+      { ok: false, error: "bad_params" },
+      { status: 400 }
+    );
+  }
 
   try {
     const supabase = supabaseServer();
@@ -21,8 +25,10 @@ export async function GET(
     console.error("[ref_events.insert] skip error:", e);
   }
 
-  const target = new URL(`/plans/${plan}`, request.nextUrl.origin);
+  const target = new URL(
+    `/plans/${encodeURIComponent(plan)}`,
+    request.nextUrl.origin
+  );
   target.searchParams.set("ref", ref);
-
   return NextResponse.redirect(target, { status: 302 });
 }
