@@ -1,3 +1,4 @@
+// lib/supabaseServer.ts (ฝั่ง SERVER เท่านั้น)
 import { createClient } from "@supabase/supabase-js";
 
 export function supabaseServer() {
