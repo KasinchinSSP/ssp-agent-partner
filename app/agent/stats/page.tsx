@@ -1,5 +1,7 @@
 import { supabaseServer } from "@/lib/supabaseServer";
 
+export const revalidate = 0;
+
 function toDateKey(d: string) {
   const dt = new Date(d);
   const yyyy = dt.getFullYear();
@@ -14,7 +16,8 @@ export default async function AgentStats({
   searchParams: { ref?: string; days?: string };
 }) {
   const ref = (searchParams.ref || "").trim();
-  const days = Number(searchParams.days || "30");
+  const daysRaw = Number(searchParams.days ?? "30");
+  const days = Number.isFinite(daysRaw) && daysRaw > 0 ? daysRaw : 30;
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 
   if (!ref) {
@@ -29,7 +32,10 @@ export default async function AgentStats({
     );
   }
 
-  const { data: events, error: errE } = await supabaseServer
+  const supabase = supabaseServer(); // ✅ ต้องเรียกเป็นฟังก์ชันก่อนใช้
+
+  // events จากการคลิกลิงก์/สแกน
+  const { data: events, error: errE } = await supabase
     .from("ref_events")
     .select("id, created_at, plan")
     .eq("ref", ref)
@@ -37,9 +43,10 @@ export default async function AgentStats({
     .order("created_at", { ascending: false })
     .limit(5000);
 
-  const { data: leads, error: errL } = await supabaseServer
+  // leads จริงจากแบบฟอร์ม /quote
+  const { data: leads, error: errL } = await supabase
     .from("leads")
-    .select("id, created_at, plan")
+    .select("id, created_at, plan_key") // ✅ ใช้ plan_key ให้ตรง schema
     .eq("ref", ref)
     .gte("created_at", since)
     .order("created_at", { ascending: false })
@@ -47,11 +54,13 @@ export default async function AgentStats({
 
   const clicksByDay: Record<string, number> = {};
   const leadsByDay: Record<string, number> = {};
-  (events || []).forEach((e) => {
+
+  (events ?? []).forEach((e: { created_at: string }) => {
     const k = toDateKey(e.created_at);
     clicksByDay[k] = (clicksByDay[k] || 0) + 1;
   });
-  (leads || []).forEach((l) => {
+
+  (leads ?? []).forEach((l: { created_at: string }) => {
     const k = toDateKey(l.created_at);
     leadsByDay[k] = (leadsByDay[k] || 0) + 1;
   });
@@ -59,8 +68,9 @@ export default async function AgentStats({
   const daysKeys = Array.from(
     new Set([...Object.keys(clicksByDay), ...Object.keys(leadsByDay)])
   ).sort();
-  const totalClicks = (events || []).length;
-  const totalLeads = (leads || []).length;
+
+  const totalClicks = events?.length ?? 0;
+  const totalLeads = leads?.length ?? 0;
   const conversion = totalClicks ? totalLeads / totalClicks : 0;
 
   return (
