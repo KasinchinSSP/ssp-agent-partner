@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { createClient as createServerClient } from "@/lib/supabaseServer";
+import { supabaseServer } from "@/lib/supabaseServer";
 import ReferralTools from "@/components/agent/ReferralTools";
 import LeadsTable from "@/components/agent/LeadsTable";
 import BISTools from "@/components/agent/BISTools";
@@ -14,7 +14,7 @@ type AgentProfile = {
 };
 
 async function getAgentBySecret(key: string) {
-  const supabase = createServerClient();
+  const supabase = supabaseServer();
   const { data, error } = await supabase
     .from("agent_profiles")
     .select("code,name,phone,line,agent_secret")
@@ -25,7 +25,7 @@ async function getAgentBySecret(key: string) {
 }
 
 async function getAliasByCode(agentCode: string) {
-  const supabase = createServerClient();
+  const supabase = supabaseServer();
   const { data } = await supabase
     .from("agent_alias")
     .select("alias,is_active")
@@ -38,7 +38,7 @@ async function getAliasByCode(agentCode: string) {
 }
 
 async function getRecentLeads(agentCode: string) {
-  const supabase = createServerClient();
+  const supabase = supabaseServer();
   const { data } = await supabase
     .from("leads")
     .select("id, fullName, planKey, gender, dob, sumAssured, createdAt")
