@@ -4,30 +4,31 @@ import { supabaseServer } from "@/lib/supabaseServer";
 import ReferralTools from "@/components/agent/ReferralTools";
 import LeadsTable from "@/components/agent/LeadsTable";
 import BISTools from "@/components/agent/BISTools";
-import { headers } from "next/headers";
+
 export const revalidate = 0;
 
 type AgentProfile = {
-  code: string; // AG123
+  code: string;
   name: string | null;
   phone: string | null;
-  line: string | null; // LINE ID หรือ URL
-  agent_secret: string; // โทเคนลับ
+  line: string | null;
+  agent_secret: string;
 };
 
 async function getAgentBySecret(key: string) {
-  const supabase = supabaseServer;
+  const supabase = supabaseServer();
   const { data, error } = await supabase
     .from("agent_profiles")
     .select("code,name,phone,line,agent_secret")
     .eq("agent_secret", key)
     .single();
+
   if (error || !data) return null;
   return data as AgentProfile;
 }
 
 async function getAliasByCode(agentCode: string) {
-  const supabase = supabaseServer;
+  const supabase = supabaseServer();
   const { data } = await supabase
     .from("agent_alias")
     .select("alias,is_active")
@@ -36,18 +37,32 @@ async function getAliasByCode(agentCode: string) {
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  return data || null; // { alias }
+
+  return data || null;
 }
 
+type LeadRow = {
+  id: string;
+  full_name: string;
+  phone: string;
+  age: number | null;
+  plan_key: string | null;
+  sum_assured: number | null;
+  created_at: string;
+  ref: string | null;
+};
+
 async function getRecentLeads(agentCode: string) {
-  const supabase = supabaseServer;
-  const { data } = await supabase
+  const supabase = supabaseServer();
+  const { data, error } = await supabase
     .from("leads")
-    .select("id, fullName, planKey, gender, age, sumAssured, createdAt")
+    .select("id, full_name, phone, age, plan_key, sum_assured, created_at, ref")
     .eq("ref", agentCode)
-    .order("createdAt", { ascending: false })
+    .order("created_at", { ascending: false })
     .limit(20);
-  return data || [];
+
+  if (error) return [];
+  return (data as LeadRow[]) || [];
 }
 
 export default async function Page({
@@ -55,13 +70,11 @@ export default async function Page({
 }: {
   searchParams: { key?: string };
 }) {
-  const key = searchParams?.key?.trim();
+  const key = (searchParams?.key || "").trim();
   if (!key) redirect("/");
 
   const agent = await getAgentBySecret(key);
-  if (!agent) {
-    redirect("/");
-  }
+  if (!agent) redirect("/");
 
   const aliasRow = await getAliasByCode(agent.code);
   const alias = aliasRow?.alias || null;
@@ -76,9 +89,9 @@ export default async function Page({
         หน้านี้สำหรับตัวแทนเท่านั้น โปรดอย่าส่งลิงก์หน้านี้ให้ลูกค้า
       </p>
 
-      <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* ซ้าย: ข้อมูล/เครื่องมือแชร์ */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="space-y-4 lg:col-span-2">
           <Suspense>
             <ReferralTools agentCode={agent.code} alias={alias} />
           </Suspense>
@@ -87,24 +100,24 @@ export default async function Page({
             <div className="font-semibold text-slate-800">
               Leads ของฉัน (ล่าสุด)
             </div>
-            <div className="text-xs text-slate-500 mt-1">
+            <div className="mt-1 text-xs text-slate-500">
               แสดง 20 รายการล่าสุดจากแบบฟอร์ม /quote ที่มี ref = {agent.code}
             </div>
             <Suspense>
-              <LeadsTable rows={leads || []} />
+              <LeadsTable rows={leads} />
             </Suspense>
           </section>
         </div>
 
         {/* ขวา: เครื่องมือ BIS + ข้อมูลโปรไฟล์ */}
-        <div className="lg:col-span-1 space-y-4">
+        <div className="space-y-4 lg:col-span-1">
           <Suspense>
             <BISTools />
           </Suspense>
 
           <section className="rounded-2xl border border-slate-200 bg-white p-4">
             <div className="font-semibold text-slate-800">ข้อมูลโปรไฟล์</div>
-            <div className="text-sm text-slate-700 mt-2 space-y-1">
+            <div className="mt-2 space-y-1 text-sm text-slate-700">
               <div>
                 <span className="text-slate-500">รหัสตัวแทน:</span>{" "}
                 <b>{agent.code}</b>
@@ -122,7 +135,7 @@ export default async function Page({
                 {agent.line || "-"}
               </div>
             </div>
-            <p className="text-[11px] text-amber-700 bg-amber-50 rounded-lg p-2 mt-3">
+            <p className="mt-3 rounded-lg bg-amber-50 p-2 text-[11px] text-amber-700">
               เพื่อความปลอดภัย: เก็บลิงก์นี้ไว้ส่วนตัว หากต้องการเปลี่ยน URL
               โปรดแจ้งผู้ดูแลระบบ
             </p>
