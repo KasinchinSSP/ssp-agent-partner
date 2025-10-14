@@ -65,7 +65,7 @@ export default function HomeClient() {
       <section className="bg-gradient-to-br from-[var(--brand-life)] to-sky-600">
         <div className="mx-auto max-w-screen-lg px-4 py-10 text-white">
           <div className="text-xs opacity-90">
-            เว็บไซต์ทีมตัวแทนในสังกัดบริษัท ฟิลลิปประกันชีวิต profile update
+            เว็บไซต์ทีมตัวแทนในสังกัดบริษัท ฟิลลิปประกันชีวิต
           </div>
           <h1 className="mt-2 text-2xl sm:text-3xl font-semibold">
             วางแผนวันนี้ เพื่อความสบายใจวันหน้า กับฟิลลิปประกันชีวิต
