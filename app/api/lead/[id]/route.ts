@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
+type Params = { id: string };
+
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<Params> }
 ) {
   try {
-    const id = params?.id?.trim();
+    const { id } = await context.params;
     if (!id) {
       return NextResponse.json(
         { ok: false, error: "missing id" },
@@ -14,8 +16,7 @@ export async function GET(
       );
     }
 
-    const supabase = supabaseServer(); // ✅ ต้องเรียกเป็นฟังก์ชันก่อน
-
+    const supabase = supabaseServer(); //
     const { data, error } = await supabase
       .from("leads")
       .select(
@@ -36,7 +37,7 @@ export async function GET(
       fullName: data.full_name,
       phone: data.phone,
       age: data.age,
-      planKey: data.plan_key, // ✅ ใช้ plan_key
+      planKey: data.plan_key,
       ref: data.ref,
       sumAssured: data.sum_assured,
       createdAt: data.created_at,
