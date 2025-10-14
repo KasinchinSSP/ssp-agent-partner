@@ -1,7 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 
-export const supabaseServer = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE!, // ฝั่งเซิร์ฟเวอร์เท่านั้น
-  { auth: { persistSession: false } }
-);
+export function supabaseServer() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  return createClient(url, serviceKey, {
+    auth: { persistSession: false },
+    global: { headers: { "X-Client-Info": "server" } },
+  });
+}

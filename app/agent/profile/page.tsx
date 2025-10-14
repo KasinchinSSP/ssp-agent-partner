@@ -4,6 +4,8 @@ import { supabaseServer } from "@/lib/supabaseServer";
 import ReferralTools from "@/components/agent/ReferralTools";
 import LeadsTable from "@/components/agent/LeadsTable";
 import BISTools from "@/components/agent/BISTools";
+import { headers } from "next/headers";
+export const revalidate = 0;
 
 type AgentProfile = {
   code: string; // AG123
@@ -41,7 +43,7 @@ async function getRecentLeads(agentCode: string) {
   const supabase = supabaseServer;
   const { data } = await supabase
     .from("leads")
-    .select("id, fullName, planKey, gender, dob, sumAssured, createdAt")
+    .select("id, fullName, planKey, gender, age, sumAssured, createdAt")
     .eq("ref", agentCode)
     .order("createdAt", { ascending: false })
     .limit(20);
@@ -58,7 +60,6 @@ export default async function Page({
 
   const agent = await getAgentBySecret(key);
   if (!agent) {
-    // ไม่พบ หรือ key ไม่ถูกต้อง → กลับหน้าแรก
     redirect("/");
   }
 
@@ -122,7 +123,7 @@ export default async function Page({
               </div>
             </div>
             <p className="text-[11px] text-amber-700 bg-amber-50 rounded-lg p-2 mt-3">
-              เพื่อความปลอดภัย: เก็บลิงก์นี้ไว้ส่วนตัว หากต้องการเปลี่ยนโทเคน
+              เพื่อความปลอดภัย: เก็บลิงก์นี้ไว้ส่วนตัว หากต้องการเปลี่ยน URL
               โปรดแจ้งผู้ดูแลระบบ
             </p>
           </section>
