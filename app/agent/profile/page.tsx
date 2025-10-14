@@ -1,3 +1,4 @@
+// app/agent/profile/page.tsx
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { supabaseServer } from "@/lib/supabaseServer";
@@ -15,6 +16,17 @@ type AgentProfile = {
   agent_secret: string;
 };
 
+type LeadRow = {
+  id: string;
+  fullName: string;
+  phone?: string | null;
+  planKey: string | null;
+  gender: "M" | "F" | null;
+  age: number | null;
+  sumAssured: number | null;
+  createdAt: string; // ISO
+};
+
 async function getAgentBySecret(key: string) {
   const supabase = supabaseServer();
   const { data, error } = await supabase
@@ -28,41 +40,46 @@ async function getAgentBySecret(key: string) {
 }
 
 async function getAliasByCode(agentCode: string) {
-  const supabase = supabaseServer();
-  const { data } = await supabase
-    .from("agent_alias")
-    .select("alias,is_active")
-    .eq("agent_code", agentCode)
-    .eq("is_active", true)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  return data || null;
+  try {
+    const supabase = supabaseServer();
+    const { data } = await supabase
+      .from("agent_alias")
+      .select("alias,is_active,created_at")
+      .eq("agent_code", agentCode)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return data ?? null; // { alias?: string }
+  } catch {
+    // เผื่อยังไม่มีตาราง/คอลัมน์นี้ ให้ไปต่อได้
+    return null;
+  }
 }
 
-type LeadRow = {
-  id: string;
-  full_name: string;
-  phone: string;
-  age: number | null;
-  plan_key: string | null;
-  sum_assured: number | null;
-  created_at: string;
-  ref: string | null;
-};
-
-async function getRecentLeads(agentCode: string) {
+async function getRecentLeads(agentCode: string): Promise<LeadRow[]> {
   const supabase = supabaseServer();
   const { data, error } = await supabase
     .from("leads")
-    .select("id, full_name, phone, age, plan_key, sum_assured, created_at, ref")
+    // ใช้ snake_case ให้ตรง schema แล้ว map เป็น camelCase ภายหลัง
+    .select(
+      "id, full_name, phone, plan_key, gender, age, sum_assured, created_at"
+    )
     .eq("ref", agentCode)
     .order("created_at", { ascending: false })
     .limit(20);
 
-  if (error) return [];
-  return (data as LeadRow[]) || [];
+  if (error || !data) return [];
+  return data.map((r: any) => ({
+    id: r.id,
+    fullName: r.full_name,
+    phone: r.phone ?? null,
+    planKey: r.plan_key ?? null,
+    gender: r.gender ?? null,
+    age: r.age ?? null,
+    sumAssured: r.sum_assured ?? null,
+    createdAt: r.created_at,
+  }));
 }
 
 export default async function Page({
@@ -70,7 +87,7 @@ export default async function Page({
 }: {
   searchParams: { key?: string };
 }) {
-  const key = (searchParams?.key || "").trim();
+  const key = searchParams?.key?.trim();
   if (!key) redirect("/");
 
   const agent = await getAgentBySecret(key);
@@ -89,9 +106,9 @@ export default async function Page({
         หน้านี้สำหรับตัวแทนเท่านั้น โปรดอย่าส่งลิงก์หน้านี้ให้ลูกค้า
       </p>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* ซ้าย: ข้อมูล/เครื่องมือแชร์ */}
-        <div className="space-y-4 lg:col-span-2">
+        <div className="lg:col-span-2 space-y-4">
           <Suspense>
             <ReferralTools agentCode={agent.code} alias={alias} />
           </Suspense>
@@ -100,24 +117,25 @@ export default async function Page({
             <div className="font-semibold text-slate-800">
               Leads ของฉัน (ล่าสุด)
             </div>
-            <div className="mt-1 text-xs text-slate-500">
+            <div className="text-xs text-slate-500 mt-1">
               แสดง 20 รายการล่าสุดจากแบบฟอร์ม /quote ที่มี ref = {agent.code}
             </div>
             <Suspense>
+              {/* rows ใช้ camelCase แล้ว */}
               <LeadsTable rows={leads} />
             </Suspense>
           </section>
         </div>
 
         {/* ขวา: เครื่องมือ BIS + ข้อมูลโปรไฟล์ */}
-        <div className="space-y-4 lg:col-span-1">
+        <div className="lg:col-span-1 space-y-4">
           <Suspense>
             <BISTools />
           </Suspense>
 
           <section className="rounded-2xl border border-slate-200 bg-white p-4">
             <div className="font-semibold text-slate-800">ข้อมูลโปรไฟล์</div>
-            <div className="mt-2 space-y-1 text-sm text-slate-700">
+            <div className="text-sm text-slate-700 mt-2 space-y-1">
               <div>
                 <span className="text-slate-500">รหัสตัวแทน:</span>{" "}
                 <b>{agent.code}</b>
@@ -135,7 +153,7 @@ export default async function Page({
                 {agent.line || "-"}
               </div>
             </div>
-            <p className="mt-3 rounded-lg bg-amber-50 p-2 text-[11px] text-amber-700">
+            <p className="text-[11px] text-amber-700 bg-amber-50 rounded-lg p-2 mt-3">
               เพื่อความปลอดภัย: เก็บลิงก์นี้ไว้ส่วนตัว หากต้องการเปลี่ยน URL
               โปรดแจ้งผู้ดูแลระบบ
             </p>
