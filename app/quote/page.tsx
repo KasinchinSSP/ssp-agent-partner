@@ -8,7 +8,7 @@ export default async function Page({
 }: {
   searchParams: { plan?: string; ref?: string };
 }) {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const cookieRef = cookieStore.get("agent_ref")?.value || null;
 
   return <QuoteClient searchParams={searchParams} cookieRef={cookieRef} />;
