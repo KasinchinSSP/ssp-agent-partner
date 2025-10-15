@@ -4,9 +4,12 @@ import { supabaseServer } from "@/lib/supabaseServer";
 type Params = { id: string };
 
 // GET /api/lead/:id — อ่านข้อมูล lead ตาม id (ต้องผ่าน RLS ตามสิทธิ์ของผู้เรียกใช้)
-export async function GET(_req: NextRequest, { params }: { params: Params }) {
+export async function GET(
+  _req: NextRequest,
+  context: { params: Promise<Params> }
+) {
   try {
-    const { id } = params;
+    const { id } = await context.params;
     if (!id) {
       return NextResponse.json(
         { ok: false, error: "missing_id" },
@@ -47,7 +50,6 @@ export async function GET(_req: NextRequest, { params }: { params: Params }) {
       );
     }
 
-    // Map เป็นรูปแบบ camelCase ฝั่ง API ให้ใช้งานง่ายใน Frontend
     const lead = {
       id: data.id,
       fullName: data.full_name,
