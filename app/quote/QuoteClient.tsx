@@ -1,19 +1,16 @@
 "use client";
-
 import { useMemo, useState } from "react";
 
-// Props ที่รับค่ามาจาก Server Component (page.tsx)
 export type QuoteClientProps = {
   searchParams: { plan?: string; ref?: string };
+  cookieRef?: string | null; // ← ต้องมีบรรทัดนี้ เพื่อรับ prop จาก page.tsx
 };
 
-// ✨ เวอร์ชันปรับปรุง: ย้ายและขยาย logic เพื่อให้ได้ ref ที่เสถียร
 export default function QuoteClient({ searchParams }: QuoteClientProps) {
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
 
-  // รับค่าจาก Server แล้ว normalize กันเคสที่แปะ ?ref= ต่อท้าย plan โดยไม่ตั้งใจ
   const rawPlan = (searchParams.plan || "").trim();
   let ref = (searchParams.ref || "").trim();
   let plan_key = rawPlan;
@@ -23,7 +20,6 @@ export default function QuoteClient({ searchParams }: QuoteClientProps) {
     ref = (tail || "").split("&")[0].trim();
   }
 
-  // เก็บ UTM จาก URL (ทำฝั่ง client เท่านั้น)
   const utm = useMemo(() => {
     if (typeof window === "undefined")
       return {} as Record<string, string | null>;
@@ -46,34 +42,28 @@ export default function QuoteClient({ searchParams }: QuoteClientProps) {
 
     const form = new FormData(e.currentTarget);
 
-    // Honeypot: ถ้ามีค่าถือว่าเป็นบอท → เงียบ ๆ กลับ ok เพื่อไม่ให้เดา endpoint ต่อ
     if ((form.get("hp") as string)?.trim()) {
       setOk(true);
       return;
     }
 
-    // อ่านค่าและ map ให้ตรงคอลัมน์ DB
     const full_name = (form.get("full_name") as string)?.trim();
     const phone = (form.get("phone") as string)?.trim();
     const ageRaw = (form.get("age") as string)?.trim();
     const sumRaw = (form.get("sum_assured") as string)?.trim();
     const pdpa_ok = form.get("pdpa_ok") === "on";
 
-    // optional
     const gender = (form.get("gender") as string) || null; // 'M' | 'F' | ''
     const birth_date = (form.get("birth_date") as string) || null; // YYYY-MM-DD
 
-    // แปลงตัวเลข
     const age = ageRaw ? Number(ageRaw) : null;
     const sum_assured = sumRaw ? Number(sumRaw) : null;
 
-    // ✅ คำนวณ ref แบบกันพลาด: form.hidden > searchParams > URL
     let refValue = ((form.get("ref") as string) || ref || "").trim();
     if (!refValue && (utm as any)._ref_from_url) {
       refValue = ((utm as any)._ref_from_url as string).trim();
     }
 
-    // ตรวจพื้นฐานฝั่ง client
     if (!full_name) return setErr("กรุณากรอกชื่อ-นามสกุล");
     if (!phone || !/^0[0-9]{9}$/.test(phone))
       return setErr("กรอกเบอร์ 10 หลักขึ้นต้น 0");
