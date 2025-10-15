@@ -23,5 +23,12 @@ export async function GET(
     `/products/${encodeURIComponent(plan)}?ref=${encodeURIComponent(ref)}`,
     request.nextUrl.origin
   );
-  return NextResponse.redirect(target, { status: 302 });
+
+  const res = NextResponse.redirect(target, { status: 302 });
+  res.cookies.set("agent_ref", ref, {
+    path: "/",
+    maxAge: 60 * 60 * 24 * 180,
+    sameSite: "lax",
+  });
+  return res;
 }

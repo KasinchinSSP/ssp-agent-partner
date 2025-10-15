@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
+// POST /api/lead — รับคำขอจากแบบฟอร์มหน้า /quote แล้วบันทึกลงตาราง public.leads
 export async function POST(req: NextRequest) {
   try {
     const data = (await req.json()) as Record<string, any>;
 
+    // กันบอทแบบง่ายด้วย Honeypot
     if (typeof data.hp === "string" && data.hp.trim() !== "") {
       return NextResponse.json(
         { ok: false, error: "blocked" },
@@ -12,6 +14,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ตรวจ PDPA
     const pdpaOk =
       data.pdpa_ok === true || data.pdpa_ok === "true" || data.pdpa_ok === "on";
     if (!pdpaOk) {
@@ -21,9 +24,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ตรวจฟิลด์บังคับ
     const fullName = (data.full_name || "").toString().trim();
     const phone = (data.phone || "").toString().trim();
-    const ref = (data.ref || "").toString().trim();
+
+    // ✅ ref: รับจาก body หรือสำรองจาก cookie 'agent_ref'
+    const refFromBody = (data.ref || "").toString().trim();
+    const refFromCookie = req.cookies.get("agent_ref")?.value?.trim() || "";
+    const ref = refFromBody || refFromCookie;
 
     if (!fullName || !phone) {
       return NextResponse.json(
@@ -61,7 +69,7 @@ export async function POST(req: NextRequest) {
 
       // ฟิลด์เสริมสำหรับการทำ Attribution/Analytics
       gender: data.gender ?? null,
-      birth_date: data.birth_date ?? null, // YYYY-MM-DD
+      birth_date: data.birth_date ?? null,
       source_url: data.source_url ?? null,
       utm_source: data.utm_source ?? null,
       utm_medium: data.utm_medium ?? null,
