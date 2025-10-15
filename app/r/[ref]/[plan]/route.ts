@@ -5,9 +5,9 @@ type Params = { ref: string; plan: string };
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Params }
+  context: { params: Promise<Params> }
 ) {
-  const { ref, plan } = params;
+  const { ref, plan } = await context.params;
 
   try {
     const admin = supabaseService();
