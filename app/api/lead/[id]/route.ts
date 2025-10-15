@@ -3,7 +3,27 @@ import { supabaseServer } from "@/lib/supabaseServer";
 
 type Params = { id: string };
 
-// GET /api/lead/:id — อ่านข้อมูล lead ตาม id (ต้องผ่าน RLS ตามสิทธิ์ของผู้เรียกใช้)
+type LeadRow = {
+  id: string;
+  full_name: string;
+  phone: string;
+  age: number | null;
+  plan_key: string | null;
+  sum_assured: number | null;
+  ref: string;
+  gender: string | null;
+  birth_date: string | null;
+  source_url: string | null;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_content: string | null;
+  utm_term: string | null;
+  created_at: string;
+};
+
+// ⚠️ Next.js 15.5: context.params เป็น Promise ต้อง await ก่อนใช้งาน
+// GET /api/lead/:id — อ่านข้อมูล lead ตาม id (อยู่ภายใต้ RLS)
 export async function GET(
   _req: NextRequest,
   context: { params: Promise<Params> }
@@ -41,7 +61,8 @@ export async function GET(
         ].join(",")
       )
       .eq("id", id)
-      .single();
+      .limit(1)
+      .maybeSingle();
 
     if (error || !data) {
       return NextResponse.json(
@@ -50,25 +71,28 @@ export async function GET(
       );
     }
 
+    // กำหนดประเภทอย่างชัดเจนเพื่อเลี่ยง union type ของไลบรารี
+    const row = data as unknown as LeadRow;
+
     const lead = {
-      id: data.id,
-      fullName: data.full_name,
-      phone: data.phone,
-      age: data.age,
-      planKey: data.plan_key,
-      sumAssured: data.sum_assured,
-      ref: data.ref,
-      gender: data.gender,
-      birthDate: data.birth_date,
-      sourceUrl: data.source_url,
+      id: row.id,
+      fullName: row.full_name,
+      phone: row.phone,
+      age: row.age,
+      planKey: row.plan_key,
+      sumAssured: row.sum_assured,
+      ref: row.ref,
+      gender: row.gender,
+      birthDate: row.birth_date,
+      sourceUrl: row.source_url,
       utm: {
-        source: data.utm_source,
-        medium: data.utm_medium,
-        campaign: data.utm_campaign,
-        content: data.utm_content,
-        term: data.utm_term,
+        source: row.utm_source,
+        medium: row.utm_medium,
+        campaign: row.utm_campaign,
+        content: row.utm_content,
+        term: row.utm_term,
       },
-      createdAt: data.created_at,
+      createdAt: row.created_at,
     };
 
     return NextResponse.json({ ok: true, lead }, { status: 200 });
