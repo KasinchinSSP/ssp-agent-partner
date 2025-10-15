@@ -3,12 +3,9 @@ import { supabaseServer } from "@/lib/supabaseServer";
 
 type Params = { id: string };
 
-export async function GET(
-  _req: NextRequest,
-  context: { params: Promise<Params> }
-) {
+export async function GET(_req: NextRequest, { params }: { params: Params }) {
   try {
-    const { id } = await context.params;
+    const { id } = params;
     if (!id) {
       return NextResponse.json(
         { ok: false, error: "missing id" },
@@ -16,7 +13,7 @@ export async function GET(
       );
     }
 
-    const supabase = supabaseServer(); //
+    const supabase = supabaseServer();
     const { data, error } = await supabase
       .from("leads")
       .select(

@@ -53,6 +53,15 @@ export async function POST(req: NextRequest) {
       pdpa_ok: true,
       user_agent:
         req.headers.get("user-agent") || String(data.user_agent || ""),
+      // ✅ fields เสริมที่ schema รองรับ
+      gender: data.gender ?? null,
+      birth_date: data.birth_date ?? null,
+      source_url: data.source_url ?? null,
+      utm_source: data.utm_source ?? null,
+      utm_medium: data.utm_medium ?? null,
+      utm_campaign: data.utm_campaign ?? null,
+      utm_content: data.utm_content ?? null,
+      utm_term: data.utm_term ?? null,
     };
 
     const supabase = supabaseServer();

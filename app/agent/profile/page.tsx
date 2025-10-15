@@ -1,4 +1,3 @@
-// app/agent/profile/page.tsx
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { supabaseService } from "@/lib/supabaseServer";
