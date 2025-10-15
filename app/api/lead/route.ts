@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
-// POST /api/lead — รับคำขอจากแบบฟอร์มหน้า /quote แล้วบันทึกลงตาราง public.leads
-// ข้อกำหนด:
-// - ต้องยินยอม PDPA
-// - ต้องมี full_name, phone (ขึ้นต้น 0 และยาว 10 หลัก)
-// - ต้องมี ref (รหัสตัวแทน)
-// - รองรับ metadata เพิ่มเติม: gender, birth_date, plan_key, sum_assured, source_url, utm_* , user_agent
 export async function POST(req: NextRequest) {
   try {
     const data = (await req.json()) as Record<string, any>;
 
-    // กันบอทแบบง่ายด้วย Honeypot
     if (typeof data.hp === "string" && data.hp.trim() !== "") {
       return NextResponse.json(
         { ok: false, error: "blocked" },
@@ -19,7 +12,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ตรวจ PDPA
     const pdpaOk =
       data.pdpa_ok === true || data.pdpa_ok === "true" || data.pdpa_ok === "on";
     if (!pdpaOk) {
@@ -29,7 +21,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ตรวจฟิลด์บังคับ
     const fullName = (data.full_name || "").toString().trim();
     const phone = (data.phone || "").toString().trim();
     const ref = (data.ref || "").toString().trim();
