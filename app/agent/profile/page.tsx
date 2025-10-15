@@ -1,7 +1,7 @@
 // app/agent/profile/page.tsx
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { supabaseService } from "@/lib/supabaseServer"; // ⬅️ ใช้ service role (ฝั่งเซิร์ฟเวอร์เท่านั้น)
+import { supabaseService } from "@/lib/supabaseServer";
 import ReferralTools from "@/components/agent/ReferralTools";
 import LeadsTable from "@/components/agent/LeadsTable";
 import BISTools from "@/components/agent/BISTools";
