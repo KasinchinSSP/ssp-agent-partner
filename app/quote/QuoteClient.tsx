@@ -7,12 +7,7 @@ export type QuoteClientProps = {
   searchParams: { plan?: string; ref?: string };
 };
 
-/**
- * QuoteClient — Client Component สำหรับฟอร์มขอใบเสนอราคา
- * - แสดงค่าจาก URL เช่น plan/ref
- * - เก็บ UTM จาก window.location.search (เฉพาะฝั่งเบราว์เซอร์)
- * - ส่ง POST → /api/lead พร้อมตรวจสอบ PDPA, เบอร์โทร, และป้องกันบอท (honeypot)
- */
+// ✨ เวอร์ชันปรับปรุง: ย้ายและขยาย logic เพื่อให้ได้ ref ที่เสถียร
 export default function QuoteClient({ searchParams }: QuoteClientProps) {
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -39,6 +34,8 @@ export default function QuoteClient({ searchParams }: QuoteClientProps) {
       utm_campaign: sp.get("utm_campaign") || null,
       utm_content: sp.get("utm_content") || null,
       utm_term: sp.get("utm_term") || null,
+      // สำรอง: เก็บ ref จาก URL ด้วย (ใช้ตอน payload ถ้า ref ว่าง)
+      _ref_from_url: sp.get("ref") || null,
     } as Record<string, string | null>;
   }, []);
 
@@ -70,11 +67,18 @@ export default function QuoteClient({ searchParams }: QuoteClientProps) {
     const age = ageRaw ? Number(ageRaw) : null;
     const sum_assured = sumRaw ? Number(sumRaw) : null;
 
+    // ✅ คำนวณ ref แบบกันพลาด: form.hidden > searchParams > URL
+    let refValue = ((form.get("ref") as string) || ref || "").trim();
+    if (!refValue && (utm as any)._ref_from_url) {
+      refValue = ((utm as any)._ref_from_url as string).trim();
+    }
+
     // ตรวจพื้นฐานฝั่ง client
     if (!full_name) return setErr("กรุณากรอกชื่อ-นามสกุล");
     if (!phone || !/^0[0-9]{9}$/.test(phone))
       return setErr("กรอกเบอร์ 10 หลักขึ้นต้น 0");
     if (!pdpa_ok) return setErr("กรุณายินยอม PDPA เพื่อให้ติดต่อกลับได้");
+    if (!refValue) return setErr("ลิงก์ไม่ครบ: ไม่พบรหัสตัวแทน (ref)");
 
     setSaving(true);
     try {
@@ -84,7 +88,7 @@ export default function QuoteClient({ searchParams }: QuoteClientProps) {
         age,
         plan_key: plan_key || null,
         sum_assured,
-        ref: ref || null,
+        ref: refValue || null,
         pdpa_ok,
         gender: gender || null,
         birth_date,
