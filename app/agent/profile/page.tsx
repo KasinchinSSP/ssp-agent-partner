@@ -1,36 +1,19 @@
 // app/agent/profile/page.tsx
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { supabaseServer } from "@/lib/supabaseServer";
+import { supabaseService } from "@/lib/supabaseServer"; // ⬅️ ใช้ service role (ฝั่งเซิร์ฟเวอร์เท่านั้น)
 import ReferralTools from "@/components/agent/ReferralTools";
 import LeadsTable from "@/components/agent/LeadsTable";
 import BISTools from "@/components/agent/BISTools";
 
 export const revalidate = 0;
 
-// getAgentBySecret
-const admin = supabaseService();
-const { data } = await admin
-  .from("agent_profiles")
-  .select("code,name,phone,line,agent_secret")
-  .eq("agent_secret", key)
-  .single();
-
-// getRecentLeads
-const admin = supabaseService();
-const { data } = await admin
-  .from("leads")
-  .select("id, full_name, plan_key, gender, age, sum_assured, created_at")
-  .eq("ref", agentCode)
-  .order("created_at", { ascending: false })
-  .limit(20);
-
 type AgentProfile = {
-  code: string;
+  code: string; // AG123
   name: string | null;
   phone: string | null;
   line: string | null;
-  agent_secret: string;
+  agent_secret: string; // โทเคนลับ
 };
 
 type LeadRow = {
@@ -45,8 +28,8 @@ type LeadRow = {
 };
 
 async function getAgentBySecret(key: string) {
-  const supabase = supabaseServer();
-  const { data, error } = await supabase
+  const admin = supabaseService();
+  const { data, error } = await admin
     .from("agent_profiles")
     .select("code,name,phone,line,agent_secret")
     .eq("agent_secret", key)
@@ -57,9 +40,10 @@ async function getAgentBySecret(key: string) {
 }
 
 async function getAliasByCode(agentCode: string) {
+  // ถ้ายังไม่มีตาราง/คอลัมน์ alias ให้คืน null เฉยๆ
   try {
-    const supabase = supabaseServer();
-    const { data } = await supabase
+    const admin = supabaseService();
+    const { data } = await admin
       .from("agent_alias")
       .select("alias,is_active,created_at")
       .eq("agent_code", agentCode)
@@ -69,14 +53,13 @@ async function getAliasByCode(agentCode: string) {
       .maybeSingle();
     return data ?? null; // { alias?: string }
   } catch {
-    // เผื่อยังไม่มีตาราง/คอลัมน์นี้ ให้ไปต่อได้
     return null;
   }
 }
 
 async function getRecentLeads(agentCode: string): Promise<LeadRow[]> {
-  const supabase = supabaseServer();
-  const { data, error } = await supabase
+  const admin = supabaseService();
+  const { data, error } = await admin
     .from("leads")
     // ใช้ snake_case ให้ตรง schema แล้ว map เป็น camelCase ภายหลัง
     .select(
@@ -138,7 +121,6 @@ export default async function Page({
               แสดง 20 รายการล่าสุดจากแบบฟอร์ม /quote ที่มี ref = {agent.code}
             </div>
             <Suspense>
-              {/* rows ใช้ camelCase แล้ว */}
               <LeadsTable rows={leads} />
             </Suspense>
           </section>
