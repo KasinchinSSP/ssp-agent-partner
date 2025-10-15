@@ -11,9 +11,17 @@ export default function Quote({ searchParams }: Props) {
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
 
-  // ดึงค่าจาก URL (แผน/ตัวแทน)
-  const plan_key = (searchParams.plan || "").trim(); // ตัวอย่าง: "HappyValue90_20"
-  const ref = (searchParams.ref || "").trim(); // ตัวอย่าง: "AG000"
+  // ดึง params ตรง ๆ จาก URL เพื่อกันเคสใช้ ? ซ้อน
+  const rawPlan = (searchParams.plan || "").trim();
+  let ref = (searchParams.ref || "").trim();
+  let plan_key = rawPlan;
+
+  // ถ้า ref ไม่มี แต่มีคนเผลอเขียน ?ref= ต่อท้าย plan ให้ดึงออกมา
+  if (!ref && rawPlan.includes("?ref=")) {
+    const [p, tail] = rawPlan.split("?ref=");
+    plan_key = p.trim();
+    ref = (tail || "").split("&")[0].trim(); // กันมีอย่างอื่นต่อท้าย
+  }
 
   // เก็บ UTM จาก URL
   const utm = useMemo(() => {
