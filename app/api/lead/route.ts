@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
 
+// POST /api/lead — รับคำขอจากแบบฟอร์มหน้า /quote แล้วบันทึกลงตาราง public.leads
+// ข้อกำหนด:
+// - ต้องยินยอม PDPA
+// - ต้องมี full_name, phone (ขึ้นต้น 0 และยาว 10 หลัก)
+// - ต้องมี ref (รหัสตัวแทน)
+// - รองรับ metadata เพิ่มเติม: gender, birth_date, plan_key, sum_assured, source_url, utm_* , user_agent
 export async function POST(req: NextRequest) {
   try {
     const data = (await req.json()) as Record<string, any>;
 
-    if (data.hp) {
+    // กันบอทแบบง่ายด้วย Honeypot
+    if (typeof data.hp === "string" && data.hp.trim() !== "") {
       return NextResponse.json(
         { ok: false, error: "blocked" },
         { status: 400 }
       );
     }
 
+    // ตรวจ PDPA
     const pdpaOk =
       data.pdpa_ok === true || data.pdpa_ok === "true" || data.pdpa_ok === "on";
     if (!pdpaOk) {
@@ -21,21 +29,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!data.full_name || !data.phone) {
+    // ตรวจฟิลด์บังคับ
+    const fullName = (data.full_name || "").toString().trim();
+    const phone = (data.phone || "").toString().trim();
+    const ref = (data.ref || "").toString().trim();
+
+    if (!fullName || !phone) {
       return NextResponse.json(
         { ok: false, error: "missing_fields" },
         { status: 400 }
       );
     }
-
-    if (!/^0[0-9]{9}$/.test(String(data.phone))) {
+    if (!/^0[0-9]{9}$/.test(phone)) {
       return NextResponse.json(
         { ok: false, error: "invalid_phone" },
         { status: 400 }
       );
     }
-
-    const ref = (data.ref || "").trim();
     if (!ref) {
       return NextResponse.json(
         { ok: false, error: "ref_required" },
@@ -43,32 +53,36 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Map ค่าลง schema ของตาราง leads (snake_case)
     const row = {
-      full_name: String(data.full_name),
-      phone: String(data.phone),
-      age: data.age ? Number(data.age) : null,
+      full_name: fullName,
+      phone,
+      age: data.age != null && data.age !== "" ? Number(data.age) : null,
       plan_key: data.plan_key ? String(data.plan_key) : null,
-      sum_assured: data.sum_assured ? Number(data.sum_assured) : null,
+      sum_assured:
+        data.sum_assured != null && data.sum_assured !== ""
+          ? Number(data.sum_assured)
+          : null,
       ref,
       pdpa_ok: true,
       user_agent:
         req.headers.get("user-agent") || String(data.user_agent || ""),
-      // ✅ fields เสริมที่ schema รองรับ
+
+      // ฟิลด์เสริมสำหรับการทำ Attribution/Analytics
       gender: data.gender ?? null,
-      birth_date: data.birth_date ?? null,
+      birth_date: data.birth_date ?? null, // YYYY-MM-DD
       source_url: data.source_url ?? null,
       utm_source: data.utm_source ?? null,
       utm_medium: data.utm_medium ?? null,
       utm_campaign: data.utm_campaign ?? null,
       utm_content: data.utm_content ?? null,
       utm_term: data.utm_term ?? null,
-    };
+    } as const;
 
     const supabase = supabaseServer();
     const { error } = await supabase.from("leads").insert(row);
-
     if (error) {
-      console.error("[leads.insert] error:", error);
+      console.error("[leads.insert]", error);
       return NextResponse.json(
         { ok: false, error: "db_error" },
         { status: 500 }
