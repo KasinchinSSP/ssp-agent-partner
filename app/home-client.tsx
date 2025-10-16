@@ -75,16 +75,23 @@ export default function HomeClient() {
       <HeroCarousel
         slides={[
           {
-            src: "/banners/banner-01.webp",
+            srcMobile: "/banners/mobile/banner-01.webp",
+            srcDesktop: "/banners/desktop/banner-d-01.webp",
             alt: "ฟิลลิปประกันชีวิต ดูแลคุณและคนที่คุณรัก",
           },
           {
-            src: "/banners/banner-02.webp",
+            srcMobile: "/banners/mobile/banner-02.webp",
+            srcDesktop: "/banners/desktop/banner-d-02.webp",
             alt: "รับ Cash Back สูงสุด 50,000 บาท",
           },
-          { src: "/banners/banner-03.webp", alt: "ผ่อน 0% สูงสุด 4 เดือน" },
           {
-            src: "/banners/banner-04.webp",
+            srcMobile: "/banners/mobile/banner-03.webp",
+            srcDesktop: "/banners/desktop/banner-d-03.webp",
+            alt: "ผ่อน 0% สูงสุด 4 เดือน",
+          },
+          {
+            srcMobile: "/banners/mobile/banner-04.webp",
+            srcDesktop: "/banners/desktop/banner-d-04.webp",
             alt: "รับ Cash Back สูงสุด 1,000,000 บาท",
           },
         ]}

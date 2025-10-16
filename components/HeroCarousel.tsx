@@ -2,7 +2,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 
-export type Slide = { src: string; alt: string };
+export type Slide = {
+  alt: string;
+  src?: string;
+  srcMobile?: string;
+  srcDesktop?: string;
+};
 
 export function HeroCarousel({
   slides,
@@ -88,20 +93,38 @@ export function HeroCarousel({
             className="h-full w-full flex transition-transform duration-700 ease-out"
             style={{ transform: `translateX(-${index * 100}%)` }}
           >
-            {slides.map((s, i) => (
-              <div key={i} className="relative shrink-0 grow-0 basis-full">
-                <Image
-                  src={s.src}
-                  alt={s.alt}
-                  fill
-                  priority={i === 0}
-                  className="object-cover"
-                  sizes={
-                    fullBleed ? "100vw" : "(max-width: 640px) 100vw, 1024px"
-                  }
-                />
-              </div>
-            ))}
+            {slides.map((s, i) => {
+              const fallback = s.srcMobile || s.src || s.srcDesktop || "";
+              return (
+                <div key={i} className="relative shrink-0 grow-0 basis-full">
+                  <picture>
+                    {s.srcDesktop && (
+                      <source
+                        media="(min-width:1024px)"
+                        srcSet={s.srcDesktop}
+                      />
+                    )}
+                    {s.srcMobile && (
+                      <source
+                        media="(max-width:1023.98px)"
+                        srcSet={s.srcMobile}
+                      />
+                    )}
+                    {/* fallback: กรณีไม่ได้แยกรูป */}
+                    <Image
+                      src={fallback}
+                      alt={s.alt}
+                      fill
+                      priority={i === 0}
+                      className="object-cover"
+                      sizes={
+                        fullBleed ? "100vw" : "(max-width: 640px) 100vw, 1024px"
+                      }
+                    />
+                  </picture>
+                </div>
+              );
+            })}
           </div>
 
           {/* overlay gradient บาง ๆ ให้ภาพอ่านง่ายขึ้น */}
