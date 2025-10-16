@@ -15,6 +15,8 @@ export function HeroCarousel({
 }) {
   const [index, setIndex] = useState(0);
   const timer = useRef<NodeJS.Timeout | null>(null);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+
   const wrap = useCallback(
     (i: number) => {
       const n = slides.length;
@@ -70,28 +72,30 @@ export function HeroCarousel({
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
-        <div className="relative h-[46vh] sm:h-[56vh] rounded-none sm:rounded-2xl overflow-hidden">
-          {/* แทร็ครูป */}
-          <div className="h-full w-full flex snap-x snap-mandatory overflow-hidden">
+        {/* ความสูง & อัตราส่วน: มือถือ 9:16, เดสก์ท็อป 16:9 */}
+        <div className="relative aspect-[9/16] sm:aspect-[16/9] rounded-none sm:rounded-2xl overflow-hidden">
+          {/* แทร็ครูป: translateX ตาม index */}
+          <div
+            ref={trackRef}
+            className="h-full w-full flex transition-transform duration-700 ease-out"
+            style={{ transform: `translateX(-${index * 100}%)` }}
+          >
             {slides.map((s, i) => (
-              <div
-                key={i}
-                className="relative shrink-0 grow-0 basis-full snap-start"
-              >
+              <div key={i} className="relative shrink-0 grow-0 basis-full">
                 <Image
                   src={s.src}
                   alt={s.alt}
                   fill
                   priority={i === 0}
                   className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 1024px"
+                  sizes="(max-width: 640px) 100vw, 1024px"
                 />
               </div>
             ))}
           </div>
 
           {/* overlay gradient บาง ๆ ให้ภาพอ่านง่ายขึ้น */}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-black/0 to-black/10" />
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/15 via-black/0 to-black/10" />
 
           {/* ปุ่มซ้าย/ขวา */}
           {slides.length > 1 && (
