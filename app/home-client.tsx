@@ -89,6 +89,7 @@ export default function HomeClient() {
           },
         ]}
         autoPlayMs={6000}
+        fullBleed
         className="bg-gradient-to-br from-[var(--brand-life)] to-sky-600"
       />
 

@@ -8,10 +8,12 @@ export function HeroCarousel({
   slides,
   autoPlayMs = 5000,
   className = "",
+  fullBleed = false,
 }: {
   slides: Slide[];
   autoPlayMs?: number;
   className?: string;
+  fullBleed?: boolean;
 }) {
   const [index, setIndex] = useState(0);
   const timer = useRef<NodeJS.Timeout | null>(null);
@@ -68,12 +70,18 @@ export function HeroCarousel({
   return (
     <section className={`w-full ${className}`} aria-roledescription="carousel">
       <div
-        className="relative mx-auto max-w-screen-lg px-0 sm:px-4"
+        className={`${
+          fullBleed ? "max-w-none px-0" : "mx-auto max-w-screen-lg px-0 sm:px-4"
+        } relative`}
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
         {/* ความสูง & อัตราส่วน: มือถือ 9:16, เดสก์ท็อป 16:9 */}
-        <div className="relative aspect-[9/16] sm:aspect-[16/9] rounded-none sm:rounded-2xl overflow-hidden">
+        <div
+          className={`relative aspect-[9/16] sm:aspect-[16/9] ${
+            fullBleed ? "rounded-none" : "rounded-none sm:rounded-2xl"
+          } overflow-hidden`}
+        >
           {/* แทร็ครูป: translateX ตาม index */}
           <div
             ref={trackRef}
@@ -88,7 +96,9 @@ export function HeroCarousel({
                   fill
                   priority={i === 0}
                   className="object-cover"
-                  sizes="(max-width: 640px) 100vw, 1024px"
+                  sizes={
+                    fullBleed ? "100vw" : "(max-width: 640px) 100vw, 1024px"
+                  }
                 />
               </div>
             ))}
