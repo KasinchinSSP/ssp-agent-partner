@@ -7,6 +7,7 @@ import { AgentContactCard } from "@/components/AgentContactCard";
 import { withRef } from "@/lib/utils/ref";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { ProductCarousel } from "@/components/ProductCarousel";
+import type { ProductCardProps } from "@/components/ProductCard";
 
 function useCookieRef() {
   return useMemo(() => {
@@ -109,7 +110,7 @@ export default function HomeClient() {
     [plans]
   );
 
-  const featured = useMemo(() => {
+  const featured = useMemo<ProductCardProps[]>(() => {
     const f = plans.filter((p) => FEATURED_KEYS.includes(p.planKey));
     // map เป็นรูปแบบที่ ProductCard ใช้
     return f.map((p: any, idx: number) => ({
@@ -125,11 +126,11 @@ export default function HomeClient() {
         .slice(0, 3),
       href: withRef(`/products/${encodeURIComponent(p.planKey)}`, ref),
       highlight: idx === 0,
-      brand: "life", // ✅ ใช้สีน้ำเงิน
+      brand: "life" as const, // ✅ ใช้สีน้ำเงิน
     }));
   }, [plans, ref]);
 
-  const featuredTakaful = useMemo(() => {
+  const featuredTakaful = useMemo<ProductCardProps[]>(() => {
     const f = plans.filter((p) => FEATURED_TAKAFUL_KEYS.includes(p.planKey));
     return f.map((p: any, idx: number) => ({
       planKey: p.planKey,
@@ -144,7 +145,7 @@ export default function HomeClient() {
         .slice(0, 3),
       href: withRef(`/products/${encodeURIComponent(p.planKey)}`, ref),
       highlight: idx === 0,
-      brand: "takaful", // ✅ ใช้สีเขียว
+      brand: "takaful" as const, // ✅ ใช้สีเขียว
     }));
   }, [plans, ref]);
 
