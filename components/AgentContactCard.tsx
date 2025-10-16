@@ -1,9 +1,19 @@
 "use client";
+import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
+
+function useCookieRef() {
+  return useMemo(() => {
+    if (typeof document === "undefined") return "";
+    const m = document.cookie.match(/(?:^|; )agent_ref=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : "";
+  }, []);
+}
 
 export function AgentContactCard() {
   const sp = useSearchParams();
-  const ref = sp.get("ref");
+  const cookieRef = useCookieRef();
+  const ref = sp.get("ref") || cookieRef || ""; // ✅ fallback จาก cookie
   if (!ref) return null;
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 flex items-center gap-3">

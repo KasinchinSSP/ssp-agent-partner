@@ -6,6 +6,14 @@ import type { PlansFile } from "@/lib/premium/client/types";
 import { AgentContactCard } from "@/components/AgentContactCard";
 import { withRef } from "@/lib/utils/ref";
 
+function useCookieRef() {
+  return useMemo(() => {
+    if (typeof document === "undefined") return "";
+    const m = document.cookie.match(/(?:^|; )agent_ref=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : "";
+  }, []);
+}
+
 const LIFE_KEYS = [
   "HappyValue90_20",
   "HappyProtection95_20",
@@ -37,7 +45,8 @@ function Section({
 
 export default function HomeClient() {
   const sp = useSearchParams();
-  const ref = sp.get("ref") || "";
+  const cookieRef = useCookieRef();
+  const ref = sp.get("ref") || cookieRef || ""; // ✅ fallback จาก cookie
   const [plans, setPlans] = useState<any[]>([]);
 
   useEffect(() => {

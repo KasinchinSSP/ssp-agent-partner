@@ -1,11 +1,21 @@
 "use client";
+import { useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { withRef } from "@/lib/utils/ref";
 
+function useCookieRef() {
+  return useMemo(() => {
+    if (typeof document === "undefined") return "";
+    const m = document.cookie.match(/(?:^|; )agent_ref=([^;]+)/);
+    return m ? decodeURIComponent(m[1]) : "";
+  }, []);
+}
+
 export function Header() {
   const sp = useSearchParams();
-  const ref = sp.get("ref") || "";
+  const cookieRef = useCookieRef();
+  const ref = sp.get("ref") || cookieRef || ""; // ✅ fallback จาก cookie
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200">
       <div className="mx-auto max-w-screen-lg px-4 py-2.5 flex items-center gap-3">

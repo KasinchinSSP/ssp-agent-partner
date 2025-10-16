@@ -20,9 +20,9 @@ export function Footer() {
             <Link href="/products" className="hover:text-[var(--brand-life)]">
               ผลิตภัณฑ์
             </Link>
-            <Link href="#disclaimer" className="hover:text-[var(--brand-life)]">
+            <a href="#disclaimer" className="hover:text-[var(--brand-life)]">
               ข้อสงวนสิทธิ์
-            </Link>
+            </a>
           </div>
         </div>
       </div>
