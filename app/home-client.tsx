@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import type { PlansFile } from "@/lib/premium/client/types";
 import { AgentContactCard } from "@/components/AgentContactCard";
 import { withRef } from "@/lib/utils/ref";
+import { HeroCarousel } from "@/components/HeroCarousel";
 
 function useCookieRef() {
   return useMemo(() => {
@@ -71,34 +72,25 @@ export default function HomeClient() {
   return (
     <div>
       {/* Hero */}
-      <section className="bg-gradient-to-br from-[var(--brand-life)] to-sky-600">
-        <div className="mx-auto max-w-screen-lg px-4 py-10 text-white">
-          <div className="text-xs opacity-90">
-            เว็บไซต์ทีมตัวแทนในสังกัดบริษัท ฟิลลิปประกันชีวิต
-          </div>
-          <h1 className="mt-2 text-2xl sm:text-3xl font-semibold">
-            วางแผนวันนี้ เพื่อความสบายใจวันหน้า กับฟิลลิปประกันชีวิต
-          </h1>
-          <p className="mt-2 text-white/90 max-w-[52ch]">
-            แนะนำผลิตภัณฑ์เด่น ขั้นตอนสมัครชัดเจน
-            บริการโดยทีมตัวแทนมืออาชีพภายใต้แบรนด์ที่คุณเชื่อมั่น
-          </p>
-          <div className="mt-4 flex gap-3">
-            <Link
-              href={withRef("/products", ref)}
-              className="rounded-xl bg-white text-[var(--brand-life)] px-4 py-2.5 font-medium shadow hover:bg-slate-50"
-            >
-              ดูผลิตภัณฑ์
-            </Link>
-            <Link
-              href={withRef("/quote", ref)}
-              className="rounded-xl bg-black/20 text-white px-4 py-2.5 font-medium shadow hover:bg-black/30"
-            >
-              ขอใบเสนอราคา
-            </Link>
-          </div>
-        </div>
-      </section>
+      <HeroCarousel
+        slides={[
+          {
+            src: "/banners/banner-01.webp",
+            alt: "ฟิลลิปประกันชีวิต ดูแลคุณและคนที่คุณรัก",
+          },
+          {
+            src: "/banners/banner-02.webp",
+            alt: "รับ Cash Back สูงสุด 50,000 บาท",
+          },
+          { src: "/banners/banner-03.webp", alt: "ผ่อน 0% สูงสุด 4 เดือน" },
+          {
+            src: "/banners/banner-04.webp",
+            alt: "รับ Cash Back สูงสุด 1,000,000 บาท",
+          },
+        ]}
+        autoPlayMs={6000}
+        className="bg-gradient-to-br from-[var(--brand-life)] to-sky-600"
+      />
 
       {/* Agent ref card */}
       <section className="mx-auto max-w-screen-lg px-4 -mt-6">
