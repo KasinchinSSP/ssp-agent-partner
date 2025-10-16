@@ -6,6 +6,7 @@ import type { PlansFile } from "@/lib/premium/client/types";
 import { AgentContactCard } from "@/components/AgentContactCard";
 import { withRef } from "@/lib/utils/ref";
 import { HeroCarousel } from "@/components/HeroCarousel";
+import { ProductCarousel } from "@/components/ProductCarousel";
 
 function useCookieRef() {
   return useMemo(() => {
@@ -21,6 +22,13 @@ const LIFE_KEYS = [
   "PremiumReturn25_15",
 ];
 const TAKAFUL_KEYS = ["TakafulFamilyWholeLife90_20"];
+
+// แผนที่อยากโชว์ในส่วน "แบบประกันแนะนำ"
+const FEATURED_KEYS = [
+  "PremiumReturn25_15",
+  "HappyValue90_20",
+  "HappyProtection95_20",
+];
 
 function Section({
   title,
@@ -44,19 +52,51 @@ function Section({
   );
 }
 
+function FeaturedSkeleton() {
+  return (
+    <div className="relative">
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-[var(--background)] to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[var(--background)] to-transparent" />
+      <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth px-2 -mx-2">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="snap-start shrink-0 w-[88%] sm:w-[60%] lg:w-[32%]"
+          >
+            <div className="animate-pulse rounded-2xl border border-slate-200 bg-white">
+              <div className="aspect-[4/3] rounded-t-2xl bg-slate-200" />
+              <div className="p-4 space-y-3">
+                <div className="h-4 w-2/3 bg-slate-200 rounded" />
+                <div className="h-3 w-11/12 bg-slate-200 rounded" />
+                <div className="h-3 w-10/12 bg-slate-200 rounded" />
+                <div className="h-9 w-full bg-slate-200 rounded-xl" />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function HomeClient() {
   const sp = useSearchParams();
   const cookieRef = useCookieRef();
   const ref = sp.get("ref") || cookieRef || ""; // ✅ fallback จาก cookie
   const [plans, setPlans] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
-      const res = await fetch("/data/pla_insurance.json", {
-        cache: "force-cache",
-      });
-      const raw: PlansFile = await res.json();
-      setPlans(raw.plans || []);
+      try {
+        const res = await fetch("/data/pla_insurance.json", {
+          cache: "force-cache",
+        });
+        const raw: PlansFile = await res.json();
+        setPlans(raw.plans || []);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
@@ -68,6 +108,25 @@ export default function HomeClient() {
     () => plans.filter((p) => TAKAFUL_KEYS.includes(p.planKey)),
     [plans]
   );
+
+  const featured = useMemo(() => {
+    const f = plans.filter((p) => FEATURED_KEYS.includes(p.planKey));
+    // map เป็นรูปแบบที่ ProductCard ใช้
+    return f.map((p: any, idx: number) => ({
+      planKey: p.planKey,
+      title: p.planName,
+      image: `/products/${encodeURIComponent(p.planKey)}.webp`,
+      bullets: [
+        p.tagline || "ออมสั้น ผลตอบแทนคุ้มค่า",
+        `อายุรับประกัน ${p.ageRange?.min}–${p.ageRange?.max} ปี`,
+        `ทุนขั้นต่ำ ${Number(p.minSumAssured || 0).toLocaleString()} บ.`,
+      ]
+        .filter(Boolean)
+        .slice(0, 3),
+      href: withRef(`/products/${encodeURIComponent(p.planKey)}`, ref),
+      highlight: idx === 0,
+    }));
+  }, [plans, ref]);
 
   return (
     <div>
@@ -123,28 +182,9 @@ export default function HomeClient() {
         </div>
       </Section>
 
-      {/* ผลิตภัณฑ์เด่น – Life */}
-      <Section title="ผลิตภัณฑ์เด่น – ประกันชีวิต" tint="life">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {life.map((p: any) => (
-            <Link
-              key={p.planKey}
-              href={withRef(`/products/${encodeURIComponent(p.planKey)}`, ref)}
-              className="rounded-2xl border border-slate-200 bg-white overflow-hidden group"
-            >
-              <div className="h-24 bg-[var(--brand-life)]/90" />
-              <div className="p-4">
-                <div className="font-semibold group-hover:text-[var(--brand-life)]">
-                  {p.planName}
-                </div>
-                <div className="text-xs text-slate-500 mt-1">
-                  อายุรับประกัน {p.ageRange?.min}–{p.ageRange?.max} ปี •
-                  ทุนขั้นต่ำ {Number(p.minSumAssured || 0).toLocaleString()} บ.
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+      {/* แบบประกันแนะนำ */}
+      <Section title="แบบประกันแนะนำ">
+        {loading ? <FeaturedSkeleton /> : <ProductCarousel items={featured} />}
       </Section>
 
       {/* ผลิตภัณฑ์เด่น – Takaful */}
