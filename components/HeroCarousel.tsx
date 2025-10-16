@@ -76,9 +76,9 @@ export function HeroCarousel({
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
       >
-        {/* ความสูง & อัตราส่วน: มือถือ 9:16, เดสก์ท็อป 16:9 */}
+        {/* ความสูง & อัตราส่วน: มือถือ 9:16, แท็บเล็ต 16:9, เดสก์ท็อป 2.4:1 */}
         <div
-          className={`relative aspect-[9/16] sm:aspect-[16/9] ${
+          className={`relative aspect-[9/16] sm:aspect-[16/9] lg:aspect-[12/5] ${
             fullBleed ? "rounded-none" : "rounded-none sm:rounded-2xl"
           } overflow-hidden`}
         >
