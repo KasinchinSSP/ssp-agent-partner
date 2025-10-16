@@ -92,14 +92,9 @@ export default function HomeClient() {
         className="bg-gradient-to-br from-[var(--brand-life)] to-sky-600"
       />
 
-      {/* Agent ref card */}
-      <section className="mx-auto max-w-screen-lg px-4 -mt-6">
-        <AgentContactCard />
-      </section>
-
       {/* เกี่ยวกับบริษัท */}
       <Section title="เกี่ยวกับฟิลลิปประกันชีวิต">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 text-sm text-slate-700">
+        <div className="rounded-2xl mt-4 border border-slate-200 bg-white p-4 sm:p-6 text-sm text-slate-700">
           ฟิลลิปประกันชีวิตมุ่งเน้นความคุ้มครองและการออมระยะยาวด้วยมาตรฐานการให้บริการแบบมืออาชีพ
           ดูแลโดยทีมตัวแทนที่ผ่านการอบรมและอยู่ภายใต้การกำกับดูแลตามกฎหมาย
           ให้คุณวางแผนได้อย่างมั่นใจ โปร่งใส และตรวจสอบได้
