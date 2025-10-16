@@ -8,6 +8,7 @@ export type ProductCardProps = {
   bullets?: string[];
   href: string;
   highlight?: boolean;
+  brand?: "life" | "takaful"; // ✅ เพิ่ม
 };
 
 export function ProductCard({
@@ -16,12 +17,16 @@ export function ProductCard({
   bullets = [],
   href,
   highlight,
+  brand = "life", // ✅ default
 }: ProductCardProps) {
+  const brandBg =
+    brand === "takaful" ? "var(--brand-takaful)" : "var(--brand-life)";
+
   return (
     <div
       className={`rounded-2xl border overflow-hidden ${
         highlight
-          ? "bg-[var(--brand-life)] text-white border-transparent"
+          ? `bg-[${brandBg}] text-white border-transparent`
           : "bg-white border-slate-200"
       }`}
     >
@@ -60,7 +65,9 @@ export function ProductCard({
           href={href}
           className={`mt-3 inline-flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium shadow-sm ${
             highlight
-              ? "bg-white text-[var(--brand-life)] hover:bg-slate-100"
+              ? "bg-white text-[var(--brand-takaful)] hover:bg-slate-100"
+              : brand === "takaful"
+              ? "bg-[var(--brand-takaful)] text-white hover:brightness-95"
               : "bg-[var(--brand-life)] text-white hover:bg-[#00264d]"
           }`}
         >

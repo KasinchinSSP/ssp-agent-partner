@@ -6,6 +6,18 @@ export function ProductCarousel({ items }: { items: ProductCardProps[] }) {
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [page, setPage] = useState(0);
 
+  // ✅ จัดการ์ดแรกให้อยู่กึ่งกลางจอ "เฉพาะมือถือ"
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 640; // < sm
+    if (!isMobile) return;
+    const first = el.querySelector<HTMLElement>("[data-card]");
+    if (!first) return;
+    const left = first.offsetLeft - (el.clientWidth - first.clientWidth) / 2;
+    el.scrollLeft = Math.max(0, left);
+  }, []);
+
   // sync page ตามการเลื่อนจริง
   useEffect(() => {
     const el = wrapRef.current;
@@ -30,9 +42,7 @@ export function ProductCarousel({ items }: { items: ProductCardProps[] }) {
 
   return (
     <div className="relative">
-      {/* ขอบซีดซ้าย/ขวา */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-[var(--background)] to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[var(--background)] to-transparent" />
+      {/* ❌ ลบขอบซีดซ้าย/ขวาออก */}
 
       {/* ปุ่มบนเดสก์ท็อป */}
       <button
@@ -50,7 +60,7 @@ export function ProductCarousel({ items }: { items: ProductCardProps[] }) {
         ›
       </button>
 
-      {/* แทร็คการ์ด */}
+      {/* แทร็คการ์ด: ใช้ snap-center เพื่อให้อยู่กลางจอเวลาหยุด */}
       <div
         ref={wrapRef}
         className="-mx-2 flex gap-4 overflow-x-auto px-2 snap-x snap-mandatory scroll-smooth"
@@ -59,7 +69,7 @@ export function ProductCarousel({ items }: { items: ProductCardProps[] }) {
           <div
             key={idx}
             data-card
-            className="snap-start shrink-0 w-[88%] sm:w-[60%] lg:w-[32%]"
+            className="snap-center shrink-0 w-[88%] sm:w-[60%] lg:w-[32%]"
           >
             <ProductCard {...it} />
           </div>

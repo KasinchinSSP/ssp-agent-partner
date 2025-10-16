@@ -30,6 +30,8 @@ const FEATURED_KEYS = [
   "HappyProtection95_20",
 ];
 
+const FEATURED_TAKAFUL_KEYS = ["TakafulFamilyWholeLife90_20"];
+
 function Section({
   title,
   children,
@@ -55,13 +57,11 @@ function Section({
 function FeaturedSkeleton() {
   return (
     <div className="relative">
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-[var(--background)] to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-[var(--background)] to-transparent" />
       <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth px-2 -mx-2">
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className="snap-start shrink-0 w-[88%] sm:w-[60%] lg:w-[32%]"
+            className="snap-center shrink-0 w-[88%] sm:w-[60%] lg:w-[32%]"
           >
             <div className="animate-pulse rounded-2xl border border-slate-200 bg-white">
               <div className="aspect-[4/3] rounded-t-2xl bg-slate-200" />
@@ -125,6 +125,26 @@ export default function HomeClient() {
         .slice(0, 3),
       href: withRef(`/products/${encodeURIComponent(p.planKey)}`, ref),
       highlight: idx === 0,
+      brand: "life", // ✅ ใช้สีน้ำเงิน
+    }));
+  }, [plans, ref]);
+
+  const featuredTakaful = useMemo(() => {
+    const f = plans.filter((p) => FEATURED_TAKAFUL_KEYS.includes(p.planKey));
+    return f.map((p: any, idx: number) => ({
+      planKey: p.planKey,
+      title: p.planName,
+      image: `/products/${encodeURIComponent(p.planKey)}.webp`,
+      bullets: [
+        p.tagline || "คุ้มครองมั่นใจตามหลักศาสนา",
+        `อายุรับประกัน ${p.ageRange?.min}–${p.ageRange?.max} ปี`,
+        `ทุนขั้นต่ำ ${Number(p.minSumAssured || 0).toLocaleString()} บ.`,
+      ]
+        .filter(Boolean)
+        .slice(0, 3),
+      href: withRef(`/products/${encodeURIComponent(p.planKey)}`, ref),
+      highlight: idx === 0,
+      brand: "takaful", // ✅ ใช้สีเขียว
     }));
   }, [plans, ref]);
 
@@ -187,28 +207,13 @@ export default function HomeClient() {
         {loading ? <FeaturedSkeleton /> : <ProductCarousel items={featured} />}
       </Section>
 
-      {/* ผลิตภัณฑ์เด่น – Takaful */}
-      <Section title="ผลิตภัณฑ์เด่น – ตะกาฟุล" tint="takaful">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {takaful.map((p: any) => (
-            <Link
-              key={p.planKey}
-              href={withRef(`/products/${encodeURIComponent(p.planKey)}`, ref)}
-              className="rounded-2xl border border-slate-200 bg-white overflow-hidden group"
-            >
-              <div className="h-24" style={{ backgroundColor: "#01680b" }} />
-              <div className="p-4">
-                <div className="font-semibold group-hover:text-[#01680b]">
-                  {p.planName}
-                </div>
-                <div className="text-xs text-slate-500 mt-1">
-                  อายุรับประกัน {p.ageRange?.min}–{p.ageRange?.max} ปี •
-                  ทุนขั้นต่ำ {Number(p.minSumAssured || 0).toLocaleString()} บ.
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+      {/* แบบประกันแนะนำ – ตะกาฟุล */}
+      <Section title="แบบประกันแนะนำ – ตะกาฟุล" tint="takaful">
+        {loading ? (
+          <FeaturedSkeleton />
+        ) : (
+          <ProductCarousel items={featuredTakaful} />
+        )}
       </Section>
 
       {/* ขั้นตอนการสมัคร */}
