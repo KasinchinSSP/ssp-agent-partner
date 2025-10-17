@@ -3,12 +3,12 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import type { PlansFile } from "@/lib/premium/client/types";
-import { AgentContactCard } from "@/components/AgentContactCard";
 import { withRef } from "@/lib/utils/ref";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { ProductCarousel } from "@/components/ProductCarousel";
 import type { ProductCardProps } from "@/components/ProductCard";
 
+/** อ่าน ref จาก cookie ฝั่ง client */
 function useCookieRef() {
   return useMemo(() => {
     if (typeof document === "undefined") return "";
@@ -17,21 +17,23 @@ function useCookieRef() {
   }, []);
 }
 
-const LIFE_KEYS = [
-  "HappyValue90_20",
-  "HappyProtection95_20",
-  "PremiumReturn25_15",
-];
-const TAKAFUL_KEYS = ["TakafulFamilyWholeLife90_20"];
-
-// แผนที่อยากโชว์ในส่วน "แบบประกันแนะนำ"
-const FEATURED_KEYS = [
-  "PremiumReturn25_15",
-  "HappyValue90_20",
-  "HappyProtection95_20",
-];
-
-const FEATURED_TAKAFUL_KEYS = ["TakafulFamilyWholeLife90_20"];
+/** ✅ Single Source of Truth สำหรับชุดคีย์แต่ละส่วน */
+const PLAN_SETS = {
+  life: [
+    "HappyValue90_20",
+    "HappyProtection95_20",
+    "PremiumReturn25_15",
+  ] as const,
+  takaful: ["TakafulFamilyWholeLife90_20"] as const,
+  featured: {
+    life: [
+      "PremiumReturn25_15",
+      "HappyValue90_20",
+      "HappyProtection95_20",
+    ] as const,
+    takaful: ["TakafulFamilyWholeLife90_20"] as const,
+  },
+} as const;
 
 function Section({
   title,
@@ -42,11 +44,11 @@ function Section({
   children: React.ReactNode;
   tint?: "life" | "takaful";
 }) {
-  const color = tint === "takaful" ? "#01680b" : "#003366";
+  const headingClass = tint === "takaful" ? "text-[#01680b]" : "text-[#003366]";
   return (
-    <section className="mx-auto max-w-screen-lg px-4 mt-8">
+    <section className="mx-auto mt-8 max-w-screen-lg px-4">
       {title && (
-        <h2 className="text-xl font-semibold mb-3" style={{ color }}>
+        <h2 className={`mb-3 text-xl font-semibold ${headingClass}`}>
           {title}
         </h2>
       )}
@@ -58,19 +60,19 @@ function Section({
 function FeaturedSkeleton() {
   return (
     <div className="relative">
-      <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth px-2 -mx-2">
+      <div className="-mx-2 flex snap-x snap-mandatory gap-4 overflow-x-auto px-2 scroll-smooth">
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className="snap-center shrink-0 w-[88%] sm:w-[60%] lg:w-[32%]"
+            className="w-[88%] shrink-0 snap-center sm:w-[60%] lg:w-[32%]"
           >
-            <div className="animate-pulse rounded-2xl border border-slate-200 bg-white">
+            <div className="animate-pulse overflow-hidden rounded-2xl border border-slate-200 bg-white">
               <div className="aspect-[4/3] rounded-t-2xl bg-slate-200" />
-              <div className="p-4 space-y-3">
-                <div className="h-4 w-2/3 bg-slate-200 rounded" />
-                <div className="h-3 w-11/12 bg-slate-200 rounded" />
-                <div className="h-3 w-10/12 bg-slate-200 rounded" />
-                <div className="h-9 w-full bg-slate-200 rounded-xl" />
+              <div className="space-y-3 p-4">
+                <div className="h-4 w-2/3 rounded bg-slate-200" />
+                <div className="h-3 w-11/12 rounded bg-slate-200" />
+                <div className="h-3 w-10/12 rounded bg-slate-200" />
+                <div className="h-9 w-full rounded-xl bg-slate-200" />
               </div>
             </div>
           </div>
@@ -101,18 +103,19 @@ export default function HomeClient() {
     })();
   }, []);
 
+  /** กลุ่มตามหมวด (ใช้ในส่วน “ผลิตภัณฑ์เด่น” ด้านล่างของหน้า) */
   const life = useMemo(
-    () => plans.filter((p) => LIFE_KEYS.includes(p.planKey)),
+    () => plans.filter((p) => PLAN_SETS.life.includes(p.planKey)),
     [plans]
   );
   const takaful = useMemo(
-    () => plans.filter((p) => TAKAFUL_KEYS.includes(p.planKey)),
+    () => plans.filter((p) => PLAN_SETS.takaful.includes(p.planKey)),
     [plans]
   );
 
+  /** ชุด “แบบประกันแนะนำ” (Life) → map เป็น ProductCardProps */
   const featured = useMemo<ProductCardProps[]>(() => {
-    const f = plans.filter((p) => FEATURED_KEYS.includes(p.planKey));
-    // map เป็นรูปแบบที่ ProductCard ใช้
+    const f = plans.filter((p) => PLAN_SETS.featured.life.includes(p.planKey));
     return f.map((p: any, idx: number) => ({
       planKey: p.planKey,
       title: p.planName,
@@ -126,12 +129,15 @@ export default function HomeClient() {
         .slice(0, 3),
       href: withRef(`/products/${encodeURIComponent(p.planKey)}`, ref),
       highlight: idx === 0,
-      brand: "life" as const, // ✅ ใช้สีน้ำเงิน
+      brand: "life" as const,
     }));
   }, [plans, ref]);
 
+  /** ชุด “แบบประกันแนะนำ – ตะกาฟุล” */
   const featuredTakaful = useMemo<ProductCardProps[]>(() => {
-    const f = plans.filter((p) => FEATURED_TAKAFUL_KEYS.includes(p.planKey));
+    const f = plans.filter((p) =>
+      PLAN_SETS.featured.takaful.includes(p.planKey)
+    );
     return f.map((p: any, idx: number) => ({
       planKey: p.planKey,
       title: p.planName,
@@ -145,7 +151,7 @@ export default function HomeClient() {
         .slice(0, 3),
       href: withRef(`/products/${encodeURIComponent(p.planKey)}`, ref),
       highlight: idx === 0,
-      brand: "takaful" as const, // ✅ ใช้สีเขียว
+      brand: "takaful" as const,
     }));
   }, [plans, ref]);
 
@@ -182,11 +188,11 @@ export default function HomeClient() {
 
       {/* เกี่ยวกับบริษัท */}
       <Section title="เกี่ยวกับฟิลลิปประกันชีวิต">
-        <div className="rounded-2xl mt-4 border border-slate-200 bg-white p-4 sm:p-6 text-sm text-slate-700">
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4 text-sm text-slate-700 sm:p-6">
           ฟิลลิปประกันชีวิตมุ่งเน้นความคุ้มครองและการออมระยะยาวด้วยมาตรฐานการให้บริการแบบมืออาชีพ
           ดูแลโดยทีมตัวแทนที่ผ่านการอบรมและอยู่ภายใต้การกำกับดูแลตามกฎหมาย
           ให้คุณวางแผนได้อย่างมั่นใจ โปร่งใส และตรวจสอบได้
-          <ul className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
             <li className="flex gap-2">
               <span className="text-green-600">✓</span> แบบประกันหลากหลาย
               ตอบโจทย์คุ้มครองและออม
@@ -219,7 +225,7 @@ export default function HomeClient() {
 
       {/* ขั้นตอนการสมัคร */}
       <Section title="สมัครง่ายใน 3 ขั้นตอน">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {[
             {
               t: "เลือกแบบประกัน",
@@ -238,14 +244,14 @@ export default function HomeClient() {
               key={i}
               className="rounded-2xl border border-slate-200 bg-white p-4"
             >
-              <div className="text-[var(--brand-life)] font-semibold">
+              <div className="font-semibold text-[var(--brand-life)]">
                 {i + 1}. {x.t}
               </div>
-              <div className="text-sm text-slate-700 mt-1">{x.d}</div>
+              <div className="mt-1 text-sm text-slate-700">{x.d}</div>
             </div>
           ))}
         </div>
-        <div className="text-[12px] text-slate-500 mt-2">
+        <div className="mt-2 text-[12px] text-slate-500">
           หมายเหตุ: ตัวเลขเบี้ยบนเว็บไซต์เป็นการประมาณการเบื้องต้น
           ตัวเลขจริงขึ้นกับการพิจารณาและเงื่อนไขบริษัท
         </div>
@@ -253,7 +259,7 @@ export default function HomeClient() {
 
       {/* ความน่าเชื่อถือ */}
       <Section title="ความน่าเชื่อถือของฟิลลิป">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {[
             {
               t: "มาตรฐานการให้บริการ",
@@ -273,7 +279,7 @@ export default function HomeClient() {
               className="rounded-2xl border border-slate-200 bg-white p-4"
             >
               <div className="font-semibold text-slate-800">{x.t}</div>
-              <div className="text-sm text-slate-700 mt-1">{x.d}</div>
+              <div className="mt-1 text-sm text-slate-700">{x.d}</div>
             </div>
           ))}
         </div>
@@ -302,21 +308,21 @@ export default function HomeClient() {
           ].map(([q, a], i) => (
             <details
               key={i}
-              className="group border-b last:border-b-0 border-slate-200 py-2"
+              className="group border-b border-slate-200 py-2 last:border-b-0"
             >
-              <summary className="list-none flex items-center justify-between cursor-pointer font-medium text-slate-800">
+              <summary className="flex cursor-pointer list-none items-center justify-between font-medium text-slate-800">
                 {q}
-                <span className="text-slate-400 group-open:rotate-180 transition">
+                <span className="transition group-open:rotate-180 text-slate-400">
                   ⌄
                 </span>
               </summary>
-              <p className="text-sm text-slate-700 mt-1">{a}</p>
+              <p className="mt-1 text-sm text-slate-700">{a}</p>
             </details>
           ))}
           <div className="mt-3 flex items-center gap-3">
             <Link
               href={withRef("/quote", ref)}
-              className="rounded-xl bg-[var(--brand-life)] text-white px-4 py-2.5 font-medium hover:bg-[#00264d]"
+              className="rounded-xl bg-[var(--brand-life)] px-4 py-2.5 font-medium text-white hover:bg-[#00264d]"
             >
               ขอให้ติดต่อกลับ
             </Link>
